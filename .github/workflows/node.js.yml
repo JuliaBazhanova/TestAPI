@@ -1,0 +1,21 @@
+name: Playwright Tests
+on:  [push]
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+      - name: Install dependencies
+        run: npm install
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+      - name: Install Playwright Test
+        run: npm install -D @playwright/test
+      - name: Axios
+        run: npm install axios
+      - name: Run Playwright tests
+        run: npx playwright test --project=chromium
