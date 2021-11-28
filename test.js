@@ -1,6 +1,5 @@
 const { test, expect } = require('@playwright/test');
 const axios = require('axios');
-const assert = require("assert");
 const fs = require("fs");
 
 // task #3
@@ -72,41 +71,33 @@ test.describe('thecocktaildb.com test', () => {
         console.log("Step 2. Validate all cocktail names include 'vodka'");
         console.log("Step 3. Validate every cocktail has IT instructions");
         await axios.get("https://www.thecocktaildb.com/api/json/v1/1/search.php?s=vodka"
-        ).then(response => {
+        ).then(async response => {
             expect(response.status).toEqual(200);
             response.data.drinks.forEach(function (item) {
                 // verify that there is no  'bourbon' and 'whiskey' in the cocktails collection
                 for (let i = 1; i <= 15; i++) {
                     let fieldName = "strIngredient" + i;
                     if (item[fieldName]) {
-                        assert.notEqual(
-                            item[fieldName].toLowerCase(),
-                            "bourbon",
-                            "Bourbon was found in the cocktails collection");
-                        assert.notEqual(
-                            item[fieldName].toLowerCase(),
-                            "whiskey",
-                            "Whiskey was found in the cocktails collection");
+                        expect(item[fieldName].toLowerCase()).not.toEqual("bourbon");
+                        expect(item[fieldName].toLowerCase()).not.toEqual("whiskey");
                     }
                 }
 
                 // verify that all cocktail names include 'vodka'
-                assert.match(
-                    item.strDrink.toLowerCase(),
-                    /vodka/,
-                    "Cocktails name doesn't include 'vodka' " + item.strDrink);
+                expect(item.strDrink.toLowerCase()).toMatch(/vodka/);
 
                 // verify every cocktail has IT instructions
-                assert.ok(
-                    !item.strInstructionsIT.isNull,
-                    "There is no instruction in Italian language " + item.strDrink);
-                assert.ok(
-                    !item.strInstructionsIT.isEmpty,
-                    "Instruction in Italian language is empty " + item.strDrink);
+                expect(item.strInstructionsIT).not.toEqual(null);
+                expect(item.strInstructionsIT.trim).not.toEqual("");
             });
 
             console.log("Step 4. Validate the amount is always the same")
-            fs.readFile('./json/count.json', 'utf8', (err, data) => {
+            // try to repeat request
+            let response2 = await axios.get("https://www.thecocktaildb.com/api/json/v1/1/search.php?s=vodka");
+            expect(response.data.drinks.length).toEqual(response2.data.drinks.length);
+
+            // for locally only
+            /*fs.readFile('./json/count.json', 'utf8', (err, data) => {
                 if (err) {
                     console.log("Error reading file from disk: ${err}");
                 } else {
@@ -114,10 +105,7 @@ test.describe('thecocktaildb.com test', () => {
                     const json = JSON.parse(data);
                     const countOfItems = json.count;
                     if (countOfItems) {
-                        assert.equal(
-                            response.data.drinks.length,
-                            countOfItems,
-                            "The count of items has changed")
+                       expect(response.data.drinks.length).toEqual(countOfItems);
                     } else {
                         // save count of cocktails
                         json.count = response.data.drinks.length;
@@ -130,7 +118,7 @@ test.describe('thecocktaildb.com test', () => {
                         });
                     }
                 }
-            });
+            });*/
         }).catch(error => {
             console.log(error);
         });
